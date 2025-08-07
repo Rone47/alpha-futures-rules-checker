@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Futures Rules Checker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #3498db;
+        }
+        
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .menu {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .menu button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        .menu button:hover {
+            background-color: #2980b9;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        button[type="submit"] {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button[type="submit"]:hover {
+            background-color: #27ae60;
+        }
+        
+        .results {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+        }
+        
+        .error {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .success {
+            color: #2ecc71;
+            font-weight: bold;
+        }
+        
+        .warning {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .rules-display {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        
+        .rule-item {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .rule-item:last-child {
+            border-bottom: none;
+        }
+        
+        .rule-title {
+            font-weight: bold;
+            color: #3498db;
+        }
+        
+        .progress-container {
+            width: 100%;
+            background-color: #ecf0f1;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        .progress-bar {
+            height: 20px;
+            border-radius: 5px;
+            background-color: #3498db;
+            text-align: center;
+            color: white;
+            line-height: 20px;
+            transition: width 0.3s;
+        }
+        
+        .danger {
+            background-color: #e74c3c;
+        }
+        
+        .warning-bar {
+            background-color: #f39c12;
+        }
+        
+        @media (max-width: 768px) {
+            .menu {
+                flex-direction: column;
+            }
+            
+            .menu button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Alpha Futures Rules Checker</h1>
+    
+    <div class="container">
+        <div class="menu">
+            <button onclick="showSection('rules')">View Account Rules</button>
+            <button onclick="showSection('consistency')">Check Consistency Rule</button>
+            <button onclick="showSection('daily-loss')">Check Daily Loss Guard</button>
+            <button onclick="showSection('mll')">Check Maximum Loss Limit</button>
+        </div>
+        
+        <div id="rules-section" class="section">
+            <h2>View Account Rules</h2>
+            <form id="rules-form">
+                <div class="form-group">
+                    <label for="rules-account-type">Account Type</label>
+                    <select id="rules-account-type" required>
+                        <option value="">Select Account Type</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="Zero">Zero</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="rules-stage">Stage</label>
+                    <select id="rules-stage" required>
+                        <option value="">Select Stage</option>
+                        <option value="Evaluation">Evaluation</option>
+                        <option value="Qualified">Qualified</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="rules-size-container">
+                    <label for="rules-size">Account Size</label>
+                    <select id="rules-size">
+                        <option value="">Select Size</option>
+                    </select>
+                </div>
+                
+                <button type="submit">Show Rules</button>
+            </form>
+            
+            <div id="rules-results" class="results" style="display: none;"></div>
+        </div>
+        
+        <div id="consistency-section" class="section" style="display: none;">
+            <h2>Check Consistency Rule</h2>
+            <form id="consistency-form">
+                <div class="form-group">
+                    <label for="consistency-account-type">Account Type</label>
+                    <select id="consistency-account-type" required>
+                        <option value="">Select Account Type</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="Zero">Zero</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="consistency-stage">Stage</label>
+                    <select id="consistency-stage" required>
+                        <option value="">Select Stage</option>
+                        <option value="Evaluation">Evaluation</option>
+                        <option value="Qualified">Qualified</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="largest-day">Largest Single Day Profit ($)</label>
+                    <input type="number" id="largest-day" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="total-profit">Total Profit ($)</label>
+                    <input type="number" id="total-profit" step="0.01" required>
+                </div>
+                
+                <button type="submit">Check Consistency</button>
+            </form>
+            
+            <div id="consistency-results" class="results" style="display: none;"></div>
+        </div>
+        
+        <div id="daily-loss-section" class="section" style="display: none;">
+            <h2>Check Daily Loss Guard</h2>
+            <form id="daily-loss-form">
+                <div class="form-group">
+                    <label for="daily-account-type">Account Type</label>
+                    <select id="daily-account-type" required>
+                        <option value="">Select Account Type</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="Zero">Zero</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="daily-stage">Stage</label>
+                    <select id="daily-stage" required>
+                        <option value="">Select Stage</option>
+                        <option value="Evaluation">Evaluation</option>
+                        <option value="Qualified">Qualified</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="daily-size">Account Size</label>
+                    <select id="daily-size" required>
+                        <option value="">Select Size</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="daily-loss">Today's P&L ($) (negative for loss)</label>
+                    <input type="number" id="daily-loss" step="0.01" required>
+                </div>
+                
+                <button type="submit">Check Daily Loss</button>
+            </form>
+            
+            <div id="daily-loss-results" class="results" style="display: none;"></div>
+        </div>
+        
+        <div id="mll-section" class="section" style="display: none;">
+            <h2>Check Maximum Loss Limit (MLL)</h2>
+            <form id="mll-form">
+                <div class="form-group">
+                    <label for="mll-account-type">Account Type</label>
+                    <select id="mll-account-type" required>
+                        <option value="">Select Account Type</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="Zero">Zero</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="mll-stage">Stage</label>
+                    <select id="mll-stage" required>
+                        <option value="">Select Stage</option>
+                        <option value="Evaluation">Evaluation</option>
+                        <option value="Qualified">Qualified</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="mll-size">Account Size</label>
+                    <select id="mll-size" required>
+                        <option value="">Select Size</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="starting-balance">Starting Balance ($)</label>
+                    <input type="number" id="starting-balance" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="current-balance">Current Balance ($)</label>
+                    <input type="number" id="current-balance" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="account-high">Account Balance High ($)</label>
+                    <input type="number" id="account-high" step="0.01" required>
+                </div>
+                
+                <button type="submit">Check MLL</button>
+            </form>
+            
+            <div id="mll-results" class="results" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        // Data model
+        const accountTypes = {
+            "Standard": {
+                "Evaluation": {
+                    "Profit Targets": {"50k": 3000, "100k": 6000, "150k": 9000},
+                    "Max Loss Limit": "4% of starting balance",
+                    "Daily Loss Guard": "None on Evaluation",
+                    "Consistency Rule": "50% (largest day ≤ 50% of total profit)",
+                    "Reset Fees": {"50k": 59, "100k": 129, "150k": 199},
+                    "Monthly Fees": {"50k": 79, "100k": 159, "150k": 239}
+                },
+                "Qualified": {
+                    "Daily Loss Guard": {"50k": 1000, "100k": 2000, "150k": 3000},
+                    "Consistency Rule": "40% (largest day ≤ 40% of total profit)",
+                    "Scaling Plan": "Yes (position limits increase with account growth)",
+                    "Profit Split": "70% (first 2 payouts), 80% (next 2), 90% (5+)",
+                    "Payout Frequency": "Bi-weekly",
+                    "Activation Fee": 149
+                }
+            },
+            "Advanced": {
+                "Evaluation": {
+                    "Profit Targets": {"50k": 4000, "100k": 8000, "150k": 12000},
+                    "Max Loss Limit": "3.5% of starting balance",
+                    "Daily Loss Guard": "None on Evaluation",
+                    "Consistency Rule": "50% (largest day ≤ 50% of total profit)",
+                    "Reset Fees": {"50k": 139, "100k": 279, "150k": 419},
+                    "Monthly Fees": {"50k": 139, "100k": 279, "150k": 419}
+                },
+                "Qualified": {
+                    "Daily Loss Guard": "2% of current balance (scales with account)",
+                    "Consistency Rule": "None",
+                    "Scaling Plan": "No (full position limits immediately)",
+                    "Profit Split": "90% always",
+                    "Payout Frequency": "Every 5 winning days ($200+ profit days)",
+                    "Activation Fee": 149
+                }
+            },
+            "Zero": {
+                "Evaluation": {
+                    "Profit Targets": {"50k": 3000, "100k": 6000},
+                    "Max Loss Limit": "4% of starting balance",
+                    "Daily Loss Guard": {"50k": 1000, "100k": 2000},
+                    "Consistency Rule": "None (can pass in one day)",
+                    "Reset Fees": {"50k": 79, "100k": 159},
+                    "Monthly Fees": {"50k": 99, "100k": 199}
+                },
+                "Qualified": {
+                    "Consistency Rule": "40% (largest day ≤ 40% of total profit)",
+                    "Scaling Plan": "Yes (position limits increase with account growth)",
+                    "Profit Split": "90% always",
+                    "Payout Frequency": "Every 5 winning days ($200+ profit days)",
+                    "Activation Fee": 0
+                }
+            }
+        };
+        
+        const newsPolicy = {
+            "Evaluation": "No restrictions",
+            "Qualified": {
+                "Standard": "No trades 2 min before/after high impact news",
+                "Zero": "No trades 2 min before/after high impact news",
+                "Advanced": "No restrictions (but prohibited practices still apply)"
+            }
+        };
+        
+        const payoutLimits = {
+            "Standard": {"min": 200, "max": 15000},
+            "Advanced": {"min": 1000, "max": 15000},
+            "Zero": {"50k": {"min": 200, "max": 1500}, "100k": {"min": 200, "max": 3000}}
+        };
+
+        // DOM elements
+        const sections = {
+            rules: document.getElementById('rules-section'),
+            consistency: document.getElementById('consistency-section'),
+            dailyLoss: document.getElementById('daily-loss-section'),
+            mll: document.getElementById('mll-section')
+        };
+        
+        const results = {
+            rules: document.getElementById('rules-results'),
+            consistency: document.getElementById('consistency-results'),
+            dailyLoss: document.getElementById('daily-loss-results'),
+            mll: document.getElementById('mll-results')
+        };
+        
+        // Form elements
+        const rulesForm = document.getElementById('rules-form');
+        const consistencyForm = document.getElementById('consistency-form');
+        const dailyLossForm = document.getElementById('daily-loss-form');
+        const mllForm = document.getElementById('mll-form');
+        
+        // Size dropdowns
+        const rulesSize = document.getElementById('rules-size');
+        const dailySize = document.getElementById('daily-size');
+        const mllSize = document.getElementById('mll-size');
+        const rulesSizeContainer = document.getElementById('rules-size-container');
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Show default section
+            showSection('rules');
+            
+            // Form submissions
+            rulesForm.addEventListener('submit', handleRulesForm);
+            consistencyForm.addEventListener('submit', handleConsistencyForm);
+            dailyLossForm.addEventListener('submit', handleDailyLossForm);
+            mllForm.addEventListener('submit', handleMllForm);
+            
+            // Account type changes
+            document.getElementById('rules-account-type').addEventListener('change', updateRulesSizeOptions);
+            document.getElementById('rules-stage').addEventListener('change', toggleRulesSizeVisibility);
+            document.getElementById('daily-account-type').addEventListener('change', updateDailySizeOptions);
+            document.getElementById('mll-account-type').addEventListener('change', updateMllSizeOptions);
+            
+            // Set default values for MLL form
+            document.getElementById('starting-balance').value = 50000;
+            document.getElementById('current-balance').value = 49000;
+            document.getElementById('account-high').value = 51000;
+        });
+        
+        // Show the selected section and hide others
+        function showSection(sectionName) {
+            // Hide all sections
+            Object.values(sections).forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show selected section
+            if (sections[sectionName]) {
+                sections[sectionName].style.display = 'block';
+            }
+            
+            // Hide all results
+            Object.values(results).forEach(result => {
+                result.style.display = 'none';
+            });
+        }
+        
+        // Update size options based on account type
+        function updateRulesSizeOptions() {
+            const accountType = document.getElementById('rules-account-type').value;
+            updateSizeOptions(rulesSize, accountType);
+        }
+        
+        function updateDailySizeOptions() {
+            const accountType = document.getElementById('daily-account-type').value;
+            updateSizeOptions(dailySize, accountType);
+        }
+        
+        function updateMllSizeOptions() {
+            const accountType = document.getElementById('mll-account-type').value;
+            updateSizeOptions(mllSize, accountType);
+        }
+        
+        // Helper function to update size dropdown options
+        function updateSizeOptions(selectElement, accountType) {
+            // Clear existing options
+            selectElement.innerHTML = '<option value="">Select Size</option>';
+            
+            if (!accountType) return;
+            
+            // Add size options based on account type
+            const sizes = {
+                "Standard": ["50k", "100k", "150k"],
+                "Advanced": ["50k", "100k", "150k"],
+                "Zero": ["50k", "100k"]
+            }[accountType] || [];
+            
+            sizes.forEach(size => {
+                const option = document.createElement('option');
+                option.value = size;
+                option.textContent = size;
+                selectElement.appendChild(option);
+            });
+        }
+        
+        // Toggle visibility of size dropdown for Advanced Qualified accounts
+        function toggleRulesSizeVisibility() {
+            const stage = document.getElementById('rules-stage').value;
+            const accountType = document.getElementById('rules-account-type').value;
+            
+            if (stage === 'Qualified' && accountType === 'Advanced') {
+                rulesSizeContainer.style.display = 'none';
+            } else {
+                rulesSizeContainer.style.display = 'block';
+            }
+        }
+        
+        // Handle rules form submission
+        function handleRulesForm(e) {
+            e.preventDefault();
+            
+            const accountType = document.getElementById('rules-account-type').value;
+            const stage = document.getElementById('rules-stage').value;
+            let size = document.getElementById('rules-size').value;
+            
+            // For Advanced Qualified, size isn't needed for most rules
+            if (stage === 'Qualified' && accountType === 'Advanced') {
+                size = null;
+            }
+            
+            displayAccountRules(accountType, stage, size);
+        }
+        
+        // Display account rules based on selections
+        function displayAccountRules(accountType, stage, size) {
+            if (!accountTypes[accountType] || !accountTypes[accountType][stage]) {
+                results.rules.innerHTML = '<div class="error">Invalid account type or stage selection</div>';
+                results.rules.style.display = 'block';
+                return;
+            }
+            
+            let html = `<h3>${accountType} Account - ${stage} Rules</h3>`;
+            
+            if (size) {
+                html += `<p><strong>Account Size:</strong> ${size}</p>`;
+            }
+            
+            html += '<div class="rules-display">';
+            
+            const rules = accountTypes[accountType][stage];
+            
+            for (const [rule, value] of Object.entries(rules)) {
+                html += '<div class="rule-item">';
+                html += `<div class="rule-title">${rule}</div>`;
+                
+                if (size && typeof value === 'object' && value !== null && size in value) {
+                    html += `<div>${value[size]}</div>`;
+                } else if (typeof value === 'object' && value !== null) {
+                    // Handle object values that aren't size-specific
+                    html += '<div>';
+                    for (const [subRule, subValue] of Object.entries(value)) {
+                        html += `${subRule}: ${subValue}<br>`;
+                    }
+                    html += '</div>';
+                } else {
+                    html += `<div>${value}</div>`;
+                }
+                
+                html += '</div>';
+            }
+            
+            // Add payout limits for Qualified accounts
+            if (stage === 'Qualified') {
+                html += '<div class="rule-item">';
+                html += '<div class="rule-title">Payout Limits</div>';
+                
+                if (accountType === 'Zero' && size) {
+                    const limits = payoutLimits[accountType][size];
+                    html += `<div>$${limits.min} minimum, $${limits.max} maximum</div>`;
+                } else if (accountType in payoutLimits) {
+                    const limits = payoutLimits[accountType];
+                    html += `<div>$${limits.min} minimum, $${limits.max} maximum</div>`;
+                } else {
+                    html += '<div>Not specified</div>';
+                }
+                
+                html += '</div>';
+                
+                // Add news trading policy
+                html += '<div class="rule-item">';
+                html += '<div class="rule-title">News Trading Policy</div>';
+                
+                if (accountType === 'Advanced') {
+                    html += `<div>${newsPolicy.Qualified.Advanced}</div>`;
+                } else {
+                    html += `<div>${newsPolicy.Qualified[accountType]}</div>`;
+                }
+                
+                html += '</div>';
+            }
+            
+            html += '</div>';
+            
+            results.rules.innerHTML = html;
+            results.rules.style.display = 'block';
+        }
+        
+        // Handle consistency form submission
+        function handleConsistencyForm(e) {
+            e.preventDefault();
+            
+            const accountType = document.getElementById('consistency-account-type').value;
+            const stage = document.getElementById('consistency-stage').value;
+            const largestDay = parseFloat(document.getElementById('largest-day').value);
+            const totalProfit = parseFloat(document.getElementById('total-profit').value);
+            
+            checkConsistencyRule(accountType, stage, largestDay, totalProfit);
+        }
+        
+        // Check consistency rule based on account type and stage
+        function checkConsistencyRule(accountType, stage, largestDay, totalProfit) {
+            let threshold = 0;
+            let message = '';
+            
+            if (stage === 'Evaluation') {
+                if (accountType === 'Zero') {
+                    results.consistency.innerHTML = `
+                        <div class="success">Zero Evaluation accounts have no consistency rule. You can pass in one day!</div>
+                        <p>Largest day: $${largestDay.toFixed(2)}</p>
+                        <p>Total profit: $${totalProfit.toFixed(2)}</p>
+                    `;
+                    results.consistency.style.display = 'block';
+                    return;
+                }
+                threshold = 0.5; // 50% for Standard/Advanced Evaluation
+                message = `Evaluation accounts require that your largest day ($${largestDay.toFixed(2)}) is no more than 50% of your total profit ($${totalProfit.toFixed(2)}).`;
+            } else { // Qualified
+                if (accountType === 'Advanced') {
+                    results.consistency.innerHTML = `
+                        <div class="success">Advanced Qualified accounts have no consistency rule.</div>
+                        <p>Largest day: $${largestDay.toFixed(2)}</p>
+                        <p>Total profit: $${totalProfit.toFixed(2)}</p>
+                    `;
+                    results.consistency.style.display = 'block';
+                    return;
+                }
+                threshold = 0.4; // 40% for Standard/Zero Qualified
+                message = `Qualified accounts require that your largest day ($${largestDay.toFixed(2)}) is no more than 40% of your total profit ($${totalProfit.toFixed(2)}).`;
+            }
+            
+            const ratio = largestDay / totalProfit;
+            
+            if (ratio > threshold) {
+                results.consistency.innerHTML = `
+                    <div class="error">Consistency Rule Violation!</div>
+                    <p>${message}</p>
+                    <p>Your largest day ($${largestDay.toFixed(2)}) is ${(ratio * 100).toFixed(1)}% of your total profit, which exceeds the ${threshold * 100}% limit.</p>
+                    <p>You need to either:</p>
+                    <ul>
+                        <li>Reduce your largest day's profit to $${(totalProfit * threshold).toFixed(2)} or less, OR</li>
+                        <li>Increase your total profit to $${(largestDay / threshold).toFixed(2)} or more</li>
+                    </ul>
+                `;
+            } else {
+                results.consistency.innerHTML = `
+                    <div class="success">Consistency Rule Satisfied!</div>
+                    <p>${message}</p>
+                    <p>Your largest day ($${largestDay.toFixed(2)}) is ${(ratio * 100).toFixed(1)}% of your total profit, which is within the ${threshold * 100}% limit.</p>
+                `;
+            }
+            
+            results.consistency.style.display = 'block';
+        }
+        
+        // Handle daily loss form submission
+        function handleDailyLossForm(e) {
+            e.preventDefault();
+            
+            const accountType = document.getElementById('daily-account-type').value;
+            const stage = document.getElementById('daily-stage').value;
+            const size = document.getElementById('daily-size').value;
+            const dailyLoss = parseFloat(document.getElementById('daily-loss').value);
+            
+            checkDailyLoss(accountType, stage, size, dailyLoss);
+        }
+        
+        // Check daily loss guard based on account type and stage
+        function checkDailyLoss(accountType, stage, size, dailyLoss) {
+            let threshold = 0;
+            let message = '';
+            
+            if (stage === 'Evaluation') {
+                if (accountType !== 'Zero') {
+                    results.dailyLoss.innerHTML = `
+                        <div class="success">Standard/Advanced Evaluation accounts have no Daily Loss Guard.</div>
+                        <p>Today's P&L: $${dailyLoss.toFixed(2)}</p>
+                    `;
+                    results.dailyLoss.style.display = 'block';
+                    return;
+                }
+            }
+            
+            if (accountType === 'Advanced' && stage === 'Qualified') {
+                results.dailyLoss.innerHTML = `
+                    <div class="success">Advanced Qualified accounts have a Daily Loss Guard that scales with account balance.</div>
+                    <p>The DLL is 2% of your current account balance.</p>
+                    <p>Today's P&L: $${dailyLoss.toFixed(2)}</p>
+                    <p>Note: This is a soft breach - your account will be locked until the next trading day if triggered.</p>
+                `;
+                results.dailyLoss.style.display = 'block';
+                return;
+            }
+            
+            // Get the threshold based on account type and size
+            if (accountType === 'Standard' && stage === 'Qualified') {
+                threshold = {
+                    '50k': 1000,
+                    '100k': 2000,
+                    '150k': 3000
+                }[size];
+                message = `Standard Qualified ${size} accounts have a Daily Loss Guard of $${threshold}.`;
+            } else if (accountType === 'Zero') {
+                threshold = {
+                    '50k': 1000,
+                    '100k': 2000
+                }[size];
+                message = `Zero ${stage} ${size} accounts have a Daily Loss Guard of $${threshold}.`;
+            }
+            
+            // Calculate percentage of threshold used
+            const percentageUsed = Math.min(Math.abs(dailyLoss) / threshold * 100, 100);
+            
+            if (dailyLoss <= -threshold) {
+                results.dailyLoss.innerHTML = `
+                    <div class="error">Daily Loss Guard Triggered!</div>
+                    <p>${message}</p>
+                    <div class="progress-container">
+                        <div class="progress-bar danger" style="width: 100%">100%</div>
+                    </div>
+                    <p>Today's loss of $${Math.abs(dailyLoss).toFixed(2)} exceeds the $${threshold} limit (${percentageUsed.toFixed(1)}%).</p>
+                    <p>Your account will be locked until the next trading day.</p>
+                `;
+            } else {
+                const remaining = threshold + dailyLoss;
+                const remainingPercentage = remaining / threshold * 100;
+                
+                let progressClass = "progress-bar";
+                if (percentageUsed > 75) {
+                    progressClass = "progress-bar warning-bar";
+                }
+                
+                results.dailyLoss.innerHTML = `
+                    <div class="success">Daily Loss Guard Not Triggered</div>
+                    <p>${message}</p>
+                    <div class="progress-container">
+                        <div class="${progressClass}" style="width: ${percentageUsed}%">${percentageUsed.toFixed(1)}%</div>
+                    </div>
+                    <p>Today's P&L: $${dailyLoss.toFixed(2)}</p>
+                    <p>You have $${remaining.toFixed(2)} remaining (${remainingPercentage.toFixed(1)}%) before hitting the Daily Loss Guard.</p>
+                `;
+            }
+            
+            results.dailyLoss.style.display = 'block';
+        }
+        
+        // Handle MLL form submission
+        function handleMllForm(e) {
+            e.preventDefault();
+            
+            const accountType = document.getElementById('mll-account-type').value;
+            const stage = document.getElementById('mll-stage').value;
+            const size = document.getElementById('mll-size').value;
+            const startingBalance = parseFloat(document.getElementById('starting-balance').value);
+            const currentBalance = parseFloat(document.getElementById('current-balance').value);
+            const accountHigh = parseFloat(document.getElementById('account-high').value);
+            
+            checkMll(accountType, stage, size, startingBalance, currentBalance, accountHigh);
+        }
+        
+        // Check Maximum Loss Limit based on account type and parameters
+        function checkMll(accountType, stage, size, startingBalance, currentBalance, accountHigh) {
+            // Determine MLL percentage based on account type
+            let mllPercentage;
+            if (accountType === 'Advanced') {
+                mllPercentage = 3.5;
+            } else {
+                mllPercentage = 4; // Standard and Zero accounts
+            }
+            
+            // Calculate initial MLL
+            const initialMll = startingBalance * (1 - mllPercentage / 100);
+            
+            // Calculate current MLL based on account high
+            const currentMll = Math.max(initialMll, accountHigh * (1 - mllPercentage / 100));
+            
+            // MLL stops trailing at the starting balance
+            const finalMll = Math.min(currentMll, startingBalance);
+            
+            // Calculate distance to MLL
+            const distanceToMll = currentBalance - finalMll;
+            const percentageToMll = (distanceToMll / (startingBalance - finalMll)) * 100;
+            
+            // Check if MLL is breached
+            const isBreached = currentBalance <= finalMll;
+            
+            // Prepare results
+            let html = `<h3>Maximum Loss Limit (MLL) Analysis</h3>`;
+            html += `<p><strong>Account Type:</strong> ${accountType} ${size} (${stage})</p>`;
+            html += `<p><strong>MLL Percentage:</strong> ${mllPercentage}%</p>`;
+            html += `<p><strong>Starting Balance:</strong> $${startingBalance.toFixed(2)}</p>`;
+            html += `<p><strong>Account Balance High:</strong> $${accountHigh.toFixed(2)}</p>`;
+            html += `<p><strong>Current MLL:</strong> $${finalMll.toFixed(2)}</p>`;
+            html += `<p><strong>Current Balance:</strong> $${currentBalance.toFixed(2)}</p>`;
+            
+            // Progress bar visualization
+            const totalRange = startingBalance - finalMll;
+            const usedRange = startingBalance - currentBalance;
+            const usedPercentage = (usedRange / totalRange) * 100;
+            
+            html += `<div class="progress-container">`;
+            
+            if (isBreached) {
+                html += `<div class="progress-bar danger" style="width: 100%">MLL BREACHED</div>`;
+                html += `</div>`;
+                html += `<div class="error">MLL Breach Detected!</div>`;
+                html += `<p>Your current balance of $${currentBalance.toFixed(2)} is below the MLL of $${finalMll.toFixed(2)}.</p>`;
+                
+                if (stage === 'Evaluation') {
+                    html += `<p>This account will no longer be eligible to become a Qualified Account.</p>`;
+                    html += `<p>You may try again by purchasing a Reset, or wait for your monthly rebill.</p>`;
+                } else {
+                    html += `<p>This Qualified Account has been breached and will be closed.</p>`;
+                }
+            } else {
+                let progressClass = "progress-bar";
+                if (usedPercentage > 75) {
+                    progressClass = "progress-bar warning-bar";
+                }
+                
+                html += `<div class="${progressClass}" style="width: ${usedPercentage}%">${usedPercentage.toFixed(1)}%</div>`;
+                html += `</div>`;
+                
+                html += `<div class="${usedPercentage > 75 ? 'warning' : 'success'}">MLL Not Breached</div>`;
+                html += `<p>You have $${distanceToMll.toFixed(2)} (${percentageToMll.toFixed(1)}%) remaining before hitting the MLL.</p>`;
+                html += `<p>If your balance reaches $${finalMll.toFixed(2)}, your account will be liquidated.</p>`;
+            }
+            
+            // Additional explanation
+            html += `<div class="rules-display">`;
+            html += `<div class="rule-item">`;
+            html += `<div class="rule-title">How MLL Works</div>`;
+            html += `<div>`;
+            html += `<p>The Maximum Loss Limit (MLL) is a trailing drawdown calculated from your account balance high at the end of each trading day.</p>`;
+            html += `<p>It starts at ${mllPercentage}% below your starting balance ($${initialMll.toFixed(2)}).</p>`;
+            html += `<p>As your account grows, the MLL trails at ${mllPercentage}% below the highest end-of-day balance.</p>`;
+            html += `<p>The MLL will never go below your starting balance ($${startingBalance.toFixed(2)}).</p>`;
+            html += `</div>`;
+            html += `</div>`;
+            html += `</div>`;
+            
+            results.mll.innerHTML = html;
+            results.mll.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
