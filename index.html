@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alpha Futures Rules Checker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Alpha Futures Rules Checker</h1>
+    
+    <div class="container">
+        <div class="menu">
+            <button onclick="showSection('rules')">View Account Rules</button>
+            <button onclick="showSection('consistency')">Check Consistency Rule</button>
+            <button onclick="showSection('daily-loss')">Check Daily Loss Guard</button>
+            <button onclick="showSection('mll')">Check Maximum Loss Limit</button>
+        </div>
+        
+        <div id="rules-section" class="section">
+            <h2>View Account Rules</h2>
+            <form id="rules-form">
+                <div class="form-group">
+                    <label for="rules-account-type">Account Type</label>
+                    <select id="rules-account-type" required>
+                        <option value="">Select Account Type</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="Zero">Zero</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="rules-stage">Stage</label>
+                    <select id="rules-stage" required>
+                        <option value="">Select Stage</option>
+                        <option value="Evaluation">Evaluation</option>
+                        <option value="Qualified">Qualified</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" id="rules-size-container">
+                    <label for="rules-size">Account Size</label>
+                    <select id="rules-size">
+                        <option value="">Select Size</option>
+                    </select>
+                </div>
+                
+                <button type="submit">Show Rules</button>
+            </form>
+            
+            <div id="rules-results" class="results" style="display: none;"></div>
+        </div>
+        
+        <div id="consistency-section" class="section" style="display: none;">
+            <h2>Check Consistency Rule</h2>
+            <form id="consistency-form">
+                <div class="form-group">
+                    <label for="consistency-account-type">Account Type</label>
+                    <select id="consistency-account-type" required>
+                        <option value="">Select Account Type</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="Zero">Zero</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="consistency-stage">Stage</label>
+                    <select id="consistency-stage" required>
+                        <option value="">Select Stage</option>
+                        <option value="Evaluation">Evaluation</option>
+                        <option value="Qualified">Qualified</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="largest-day">Largest Single Day Profit ($)</label>
+                    <input type="number" id="largest-day" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="total-profit">Total Profit ($)</label>
+                    <input type="number" id="total-profit" step="0.01" required>
+                </div>
+                
+                <button type="submit">Check Consistency</button>
+            </form>
+            
+            <div id="consistency-results" class="results" style="display: none;"></div>
+        </div>
+        
+        <div id="daily-loss-section" class="section" style="display: none;">
+            <h2>Check Daily Loss Guard</h2>
+            <form id="daily-loss-form">
+                <div class="form-group">
+                    <label for="daily-account-type">Account Type</label>
+                    <select id="daily-account-type" required>
+                        <option value="">Select Account Type</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="Zero">Zero</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="daily-stage">Stage</label>
+                    <select id="daily-stage" required>
+                        <option value="">Select Stage</option>
+                        <option value="Evaluation">Evaluation</option>
+                        <option value="Qualified">Qualified</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="daily-size">Account Size</label>
+                    <select id="daily-size" required>
+                        <option value="">Select Size</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="daily-loss">Today's P&L ($) (negative for loss)</label>
+                    <input type="number" id="daily-loss" step="0.01" required>
+                </div>
+                
+                <button type="submit">Check Daily Loss</button>
+            </form>
+            
+            <div id="daily-loss-results" class="results" style="display: none;"></div>
+        </div>
+        
+        <div id="mll-section" class="section" style="display: none;">
+            <h2>Check Maximum Loss Limit (MLL)</h2>
+            <form id="mll-form">
+                <div class="form-group">
+                    <label for="mll-account-type">Account Type</label>
+                    <select id="mll-account-type" required>
+                        <option value="">Select Account Type</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Advanced">Advanced</option>
+                        <option value="Zero">Zero</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="mll-stage">Stage</label>
+                    <select id="mll-stage" required>
+                        <option value="">Select Stage</option>
+                        <option value="Evaluation">Evaluation</option>
+                        <option value="Qualified">Qualified</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="mll-size">Account Size</label>
+                    <select id="mll-size" required>
+                        <option value="">Select Size</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="starting-balance">Starting Balance ($)</label>
+                    <input type="number" id="starting-balance" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="current-balance">Current Balance ($)</label>
+                    <input type="number" id="current-balance" step="0.01" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="account-high">Account Balance High ($)</label>
+                    <input type="number" id="account-high" step="0.01" required>
+                </div>
+                
+                <button type="submit">Check MLL</button>
+            </form>
+            
+            <div id="mll-results" class="results" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
